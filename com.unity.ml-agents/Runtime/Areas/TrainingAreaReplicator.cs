@@ -5,7 +5,8 @@ using UnityEngine;
 namespace Unity.MLAgents.Areas
 {
     /// <summary>
-    /// The Training Ares Replicator allows for a training area object group to be replicated dynamically during runtime.
+    /// The Training Area Replicator allows for a training area object group to be replicated dynamically during runtime
+    /// in a 2D horizontal grid layout (X and Z axes only, maintaining the base Y position).
     /// </summary>
     [DefaultExecutionOrder(-5)]
     public class TrainingAreaReplicator : MonoBehaviour
@@ -30,14 +31,14 @@ namespace Unity.MLAgents.Areas
         /// </summary>
         public bool buildOnly = true;
 
-        int3 m_GridSize = new(1, 1, 1);
+        int2 m_GridSize = new(1, 1);
         int m_AreaCount;
         string m_TrainingAreaName;
 
         /// <summary>
-        /// The size of the computed grid to pack the training areas into.
+        /// The size of the computed grid to pack the training areas into (X and Z dimensions only).
         /// </summary>
-        public int3 GridSize => m_GridSize;
+        public int2 GridSize => m_GridSize;
 
         /// <summary>
         /// The name of the training area.
@@ -74,7 +75,7 @@ namespace Unity.MLAgents.Areas
         }
 
         /// <summary>
-        /// Computes the Grid Size for replicating the training area.
+        /// Computes the Grid Size for replicating the training area in 2D (X and Z axes only).
         /// </summary>
         void ComputeGridSize()
         {
@@ -83,41 +84,41 @@ namespace Unity.MLAgents.Areas
             if (Academy.Instance.Communicator != null)
                 numAreas = Academy.Instance.NumAreas;
 
-            var rootNumAreas = Mathf.Pow(numAreas, 1.0f / 3.0f);
+            // Compute 2D grid size using square root instead of cube root
+            var rootNumAreas = Mathf.Sqrt(numAreas);
             m_GridSize.x = Mathf.CeilToInt(rootNumAreas);
-            m_GridSize.y = Mathf.CeilToInt(rootNumAreas);
-            var zSize = Mathf.CeilToInt((float)numAreas / (m_GridSize.x * m_GridSize.y));
-            m_GridSize.z = zSize == 0 ? 1 : zSize;
+            var zSize = Mathf.CeilToInt((float)numAreas / m_GridSize.x);
+            m_GridSize.y = zSize == 0 ? 1 : zSize;
         }
 
         /// <summary>
-        /// Adds replicas of the training area to the scene.
+        /// Adds replicas of the training area to the scene in a 2D horizontal layout (X-Z plane).
         /// </summary>
         /// <exception cref="UnityAgentsException"></exception>
         void AddEnvironments()
         {
-            if (numAreas > m_GridSize.x * m_GridSize.y * m_GridSize.z)
+            if (numAreas > m_GridSize.x * m_GridSize.y)
             {
                 throw new UnityAgentsException("The number of training areas that you have specified exceeds the size of the grid.");
             }
 
-            for (int z = 0; z < m_GridSize.z; z++)
+            // Get the base Y position from the base area
+            float baseYPosition = baseArea.transform.position.y;
+
+            for (int z = 0; z < m_GridSize.y; z++)
             {
-                for (int y = 0; y < m_GridSize.y; y++)
+                for (int x = 0; x < m_GridSize.x; x++)
                 {
-                    for (int x = 0; x < m_GridSize.x; x++)
+                    if (m_AreaCount == 0)
                     {
-                        if (m_AreaCount == 0)
-                        {
-                            // Skip this first area since it already exists.
-                            m_AreaCount = 1;
-                        }
-                        else if (m_AreaCount < numAreas)
-                        {
-                            m_AreaCount++;
-                            var area = Instantiate(baseArea, new Vector3(x * separation, y * separation, z * separation), Quaternion.identity);
-                            area.name = m_TrainingAreaName;
-                        }
+                        // Skip this first area since it already exists.
+                        m_AreaCount = 1;
+                    }
+                    else if (m_AreaCount < numAreas)
+                    {
+                        m_AreaCount++;
+                        var area = Instantiate(baseArea, new Vector3(x * separation, baseYPosition, z * separation), Quaternion.identity);
+                        area.name = m_TrainingAreaName;
                     }
                 }
             }

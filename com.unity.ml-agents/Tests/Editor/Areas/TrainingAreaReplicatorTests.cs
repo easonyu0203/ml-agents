@@ -49,12 +49,11 @@ namespace Unity.MLAgents.Tests.Areas
             m_Replicator.numAreas = numAreas;
             m_Replicator.Awake();
             m_Replicator.OnEnable();
-            var m_CorrectGridSize = int3.zero;
-            var m_RootNumAreas = Mathf.Pow(numAreas, 1.0f / 3.0f);
+            var m_CorrectGridSize = int2.zero;
+            var m_RootNumAreas = Mathf.Sqrt(numAreas);
             m_CorrectGridSize.x = Mathf.CeilToInt(m_RootNumAreas);
-            m_CorrectGridSize.y = Mathf.CeilToInt(m_RootNumAreas);
-            m_CorrectGridSize.z = Mathf.CeilToInt((float)numAreas / (m_CorrectGridSize.x * m_CorrectGridSize.y));
-            Assert.GreaterOrEqual(m_Replicator.GridSize.x * m_Replicator.GridSize.y * m_Replicator.GridSize.z, m_Replicator.numAreas);
+            m_CorrectGridSize.y = Mathf.CeilToInt((float)numAreas / m_CorrectGridSize.x);
+            Assert.GreaterOrEqual(m_Replicator.GridSize.x * m_Replicator.GridSize.y, m_Replicator.numAreas);
             Assert.AreEqual(m_CorrectGridSize, m_Replicator.GridSize);
         }
 
