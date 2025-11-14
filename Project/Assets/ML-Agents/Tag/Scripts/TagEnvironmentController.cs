@@ -124,16 +124,17 @@ public class TagEnvironmentController : MonoBehaviour
     }
 
     /// <summary>
-    /// End the current episode for all agents.
+    /// End the current episode for all agents due to max steps reached.
+    /// Uses EpisodeInterrupted() to signal truncation rather than termination.
     /// </summary>
     public void EndEpisode()
     {
-        // End episode for all agents
+        // Interrupt episode for all agents (truncation, not termination)
         foreach (var predator in predatorAgents)
         {
             if (predator != null)
             {
-                predator.EndEpisode();
+                predator.EpisodeInterrupted();
             }
         }
 
@@ -141,7 +142,7 @@ public class TagEnvironmentController : MonoBehaviour
         {
             if (prey != null)
             {
-                prey.EndEpisode();
+                prey.EpisodeInterrupted();
             }
         }
 

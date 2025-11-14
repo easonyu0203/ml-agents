@@ -338,7 +338,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 1000
+  MaxStep: 0
   turnSpeed: 150
   moveSpeed: 1.5
   spawnArea: {fileID: 0}
