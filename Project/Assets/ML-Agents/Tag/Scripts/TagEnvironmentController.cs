@@ -9,13 +9,16 @@ using Unity.MLAgents;
 public class TagEnvironmentController : MonoBehaviour
 {
     [Header("Episode Settings")]
+    [Tooltip("Use deterministic episode length (mean value) or dynamic (sampled from normal distribution)")]
+    [SerializeField] private bool useDeterministicEpisodeLength = false;
+
     [Tooltip("Mean episode length in steps")]
     [SerializeField] private float episodeLengthMean = 1000f;
 
-    [Tooltip("Standard deviation for episode length")]
+    [Tooltip("Standard deviation for episode length (only used when dynamic mode is enabled)")]
     [SerializeField] private float episodeLengthStd = 200f;
 
-    [Tooltip("Minimum episode length to prevent too short episodes")]
+    [Tooltip("Minimum episode length to prevent too short episodes (only used when dynamic mode is enabled)")]
     [SerializeField] private int minEpisodeLength = 500;
 
     [Header("Agent References")]
@@ -71,18 +74,27 @@ public class TagEnvironmentController : MonoBehaviour
     }
 
     /// <summary>
-    /// Sample episode length from normal distribution.
+    /// Sample episode length from normal distribution or return deterministic value.
     /// </summary>
     private int SampleEpisodeLength()
     {
-        // Box-Muller transform for normal distribution
-        float u1 = Random.value;
-        float u2 = Random.value;
-        float randStdNormal = Mathf.Sqrt(-2.0f * Mathf.Log(u1)) * Mathf.Sin(2.0f * Mathf.PI * u2);
-        float sampledLength = episodeLengthMean + episodeLengthStd * randStdNormal;
+        if (useDeterministicEpisodeLength)
+        {
+            // Use deterministic episode length (mean value)
+            return Mathf.RoundToInt(episodeLengthMean);
+        }
+        else
+        {
+            // Sample from normal distribution
+            // Box-Muller transform for normal distribution
+            float u1 = Random.value;
+            float u2 = Random.value;
+            float randStdNormal = Mathf.Sqrt(-2.0f * Mathf.Log(u1)) * Mathf.Sin(2.0f * Mathf.PI * u2);
+            float sampledLength = episodeLengthMean + episodeLengthStd * randStdNormal;
 
-        // Clamp to minimum episode length
-        return Mathf.Max(minEpisodeLength, Mathf.RoundToInt(sampledLength));
+            // Clamp to minimum episode length
+            return Mathf.Max(minEpisodeLength, Mathf.RoundToInt(sampledLength));
+        }
     }
 
     /// <summary>
